@@ -9,14 +9,18 @@ import {
   Query,
   ParseUUIDPipe,
   UseGuards,
-  Request,
 } from '@nestjs/common';
 import { MatchesService } from './matches.service';
 import { CreateMatchDto } from './dto/create-match.dto';
 import { UpdateMatchDto } from './dto/update-match.dto';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { Public } from '../auth/decorators/public.decorator';
 import { ApiTags, ApiOperation, ApiResponse, ApiQuery, ApiBearerAuth } from '@nestjs/swagger';
 
 @ApiTags('matches')
+@UseGuards(JwtAuthGuard)
+@ApiBearerAuth()
 @Controller('matches')
 export class MatchesController {
   constructor(private readonly matchesService: MatchesService) {}
@@ -24,10 +28,9 @@ export class MatchesController {
   @Post()
   @ApiOperation({ summary: 'Crear un nuevo partido' })
   @ApiResponse({ status: 201, description: 'Partido creado exitosamente' })
-  create(@Request() req, @Body() createMatchDto: CreateMatchDto) {
-    // TODO: Implementar autenticación
-    const userId = 'demo-user-id'; // Temporal - reemplazar con auth real
-    return this.matchesService.create(userId, createMatchDto);
+  @ApiResponse({ status: 401, description: 'No autorizado' })
+  create(@CurrentUser() user: any, @Body() createMatchDto: CreateMatchDto) {
+    return this.matchesService.create(user.id, createMatchDto);
   }
 
   @Get()
@@ -37,48 +40,56 @@ export class MatchesController {
   @ApiQuery({ name: 'courtType', required: false, enum: ['FIVE', 'SEVEN', 'ELEVEN', 'OTHER'] })
   @ApiQuery({ name: 'category', required: false, enum: ['FRIENDS', 'FRIENDLY', 'TOURNAMENT'] })
   @ApiQuery({ name: 'result', required: false, enum: ['WON', 'LOST', 'TIED'] })
+  @ApiResponse({ status: 200, description: 'Lista de partidos' })
+  @ApiResponse({ status: 401, description: 'No autorizado' })
   findAll(
-    @Request() req,
+    @CurrentUser() user: any,
     @Query('startDate') startDate?: Date,
     @Query('endDate') endDate?: Date,
     @Query('courtType') courtType?: string,
     @Query('category') category?: string,
     @Query('result') result?: string,
   ) {
-    const userId = 'demo-user-id';
     const filters = { startDate, endDate, courtType, category, result };
-    return this.matchesService.findAll(userId, filters);
+    return this.matchesService.findAll(user.id, filters);
   }
 
   @Get('recent')
   @ApiOperation({ summary: 'Obtener partidos recientes' })
-  getRecent(@Request() req) {
-    const userId = 'demo-user-id';
-    return this.matchesService.getRecentMatches(userId);
+  @ApiResponse({ status: 200, description: 'Partidos recientes' })
+  @ApiResponse({ status: 401, description: 'No autorizado' })
+  getRecent(@CurrentUser() user: any) {
+    return this.matchesService.getRecentMatches(user.id);
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'Obtener un partido por ID' })
-  findOne(@Request() req, @Param('id', ParseUUIDPipe) id: string) {
-    const userId = 'demo-user-id';
-    return this.matchesService.findOne(userId, id);
+  @ApiResponse({ status: 200, description: 'Partido encontrado' })
+  @ApiResponse({ status: 401, description: 'No autorizado' })
+  @ApiResponse({ status: 404, description: 'Partido no encontrado' })
+  findOne(@CurrentUser() user: any, @Param('id', ParseUUIDPipe) id: string) {
+    return this.matchesService.findOne(user.id, id);
   }
 
   @Patch(':id')
   @ApiOperation({ summary: 'Actualizar un partido' })
+  @ApiResponse({ status: 200, description: 'Partido actualizado' })
+  @ApiResponse({ status: 401, description: 'No autorizado' })
+  @ApiResponse({ status: 404, description: 'Partido no encontrado' })
   update(
-    @Request() req,
+    @CurrentUser() user: any,
     @Param('id', ParseUUIDPipe) id: string,
     @Body() updateMatchDto: UpdateMatchDto,
   ) {
-    const userId = 'demo-user-id';
-    return this.matchesService.update(userId, id, updateMatchDto);
+    return this.matchesService.update(user.id, id, updateMatchDto);
   }
 
   @Delete(':id')
   @ApiOperation({ summary: 'Eliminar un partido' })
-  remove(@Request() req, @Param('id', ParseUUIDPipe) id: string) {
-    const userId = 'demo-user-id';
-    return this.matchesService.remove(userId, id);
+  @ApiResponse({ status: 200, description: 'Partido eliminado' })
+  @ApiResponse({ status: 401, description: 'No autorizado' })
+  @ApiResponse({ status: 404, description: 'Partido no encontrado' })
+  remove(@CurrentUser() user: any, @Param('id', ParseUUIDPipe) id: string) {
+    return this.matchesService.remove(user.id, id);
   }
 }
