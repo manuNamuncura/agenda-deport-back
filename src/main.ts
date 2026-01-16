@@ -1,3 +1,5 @@
+// src/main.ts
+
 import { NestFactory, Reflector } from '@nestjs/core';
 import { ValidationPipe, ClassSerializerInterceptor } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
@@ -37,6 +39,7 @@ async function bootstrap() {
   // Configurar CORS
   app.enableCors({
     origin: ['http://localhost:3000', 'http://localhost:5173', 'http://localhost:8080'],
+    methods: 'GET, HEAD, PUT, PATCH, POST, DELETE',
     credentials: true,
     allowedHeaders: [
       'Authorization',

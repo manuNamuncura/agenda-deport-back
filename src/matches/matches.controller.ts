@@ -1,3 +1,5 @@
+// src/matches/matches.controller.ts
+
 import {
   Controller,
   Get,
@@ -15,12 +17,11 @@ import { CreateMatchDto } from './dto/create-match.dto';
 import { UpdateMatchDto } from './dto/update-match.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
-import { Public } from '../auth/decorators/public.decorator';
 import { ApiTags, ApiOperation, ApiResponse, ApiQuery, ApiBearerAuth } from '@nestjs/swagger';
 
 @ApiTags('matches')
 @UseGuards(JwtAuthGuard)
-@ApiBearerAuth()
+@ApiBearerAuth('JWT-auth')
 @Controller('matches')
 export class MatchesController {
   constructor(private readonly matchesService: MatchesService) {}
@@ -78,7 +79,7 @@ export class MatchesController {
   @ApiResponse({ status: 404, description: 'Partido no encontrado' })
   update(
     @CurrentUser() user: any,
-    @Param('id', ParseUUIDPipe) id: string,
+    @Param('id') id: string,
     @Body() updateMatchDto: UpdateMatchDto,
   ) {
     return this.matchesService.update(user.id, id, updateMatchDto);
@@ -89,7 +90,7 @@ export class MatchesController {
   @ApiResponse({ status: 200, description: 'Partido eliminado' })
   @ApiResponse({ status: 401, description: 'No autorizado' })
   @ApiResponse({ status: 404, description: 'Partido no encontrado' })
-  remove(@CurrentUser() user: any, @Param('id', ParseUUIDPipe) id: string) {
+  remove(@CurrentUser() user: any, @Param('id') id: string) {
     return this.matchesService.remove(user.id, id);
   }
 }
