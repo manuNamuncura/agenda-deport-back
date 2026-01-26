@@ -12,10 +12,10 @@ import { AuthModule } from './auth/auth.module';
       isGlobal: true,
       envFilePath: '.env',
     }),
-    MatchesModule, 
-    UsersModule, 
-    StatsModule, 
-    PrismaModule, 
+    MatchesModule,
+    UsersModule,
+    StatsModule,
+    PrismaModule,
     AuthModule
   ],
 })
