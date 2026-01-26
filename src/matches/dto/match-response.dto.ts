@@ -13,6 +13,9 @@ export class MatchResponseDto {
   placeId: string;
   placeName: string;
   latitude?: number;
+  address?: string;
+  city?: string;
+  country?: string;
   longitude?: number;
   createdAt: Date;
   updatedAt: Date;

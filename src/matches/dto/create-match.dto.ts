@@ -1,4 +1,4 @@
-import { IsEnum, IsInt, IsNotEmpty, IsOptional, IsString, Min, Max } from 'class-validator';
+import { IsEnum, IsInt, IsNotEmpty, IsOptional, IsString, Min, Max, IsNumber, isNumber } from 'class-validator';
 import { CourtType, Category, Result, PerformanceRating } from '@prisma/client';
 import { Type } from 'class-transformer';
 
@@ -40,8 +40,10 @@ export class CreateMatchDto {
   placeName: string;
 
   @IsOptional()
+  @IsNumber()
   latitude?: number;
 
   @IsOptional()
+  @IsNumber()
   longitude?: number;
 }

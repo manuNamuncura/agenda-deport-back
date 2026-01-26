@@ -21,8 +21,11 @@ export class MatchesService {
       notes: match.notes,
       placeId: match.placeId,
       placeName: match.placeName,
-      latitude: match.latitude,
-      longitude: match.longitude,
+      latitude: match.latitude ?? null,
+      longitude: match.longitude ?? null,
+      address: match.address,
+      city: match.city,
+      country: match.country,
       createdAt: match.createdAt,
       updatedAt: match.updatedAt,
     };
@@ -35,6 +38,9 @@ export class MatchesService {
         userId,
       },
     });
+
+    // Actualizar estadísticas del usuario
+    await this.updateUserStats(userId);
 
     return this.mapToDto(match);
   }
@@ -104,6 +110,9 @@ export class MatchesService {
       data: updateMatchDto,
     });
 
+    // Actualizar estadisiticas del usuario
+    await this.updateUserStats(userId);
+
     return this.mapToDto(updatedMatch);
   }
 
@@ -129,5 +138,36 @@ export class MatchesService {
     });
 
     return matches.map(this.mapToDto);
+  }
+
+  private async updateUserStats(userId: string): Promise<void> {
+    const matches = await this.prisma.match.findMany({
+      where: { userId },
+    });
+
+    if (matches.length === 0) return;
+
+    const stats = {
+      totalMatches: matches.length,
+      totalWins: matches.filter(m => m.result === 'WON').length,
+      totalLosses: matches.filter(m => m.result === 'LOST').length,
+      totalTies: matches.filter(m => m.result === 'TIED').length,
+      totalGoalsFor: matches.reduce((sum, m) => sum + m.goalsFor, 0),
+      totalGoalsAgainst: matches.reduce((sum, m) => sum + m.goalsAgainst, 0),
+      fiveMatches: matches.filter(m => m.courtType === 'FIVE').length,
+      sevenMatches: matches.filter(m => m.courtType === 'SEVEN').length,
+      elevenMatches: matches.filter(m => m.courtType === 'ELEVEN').length,
+      otherMatches: matches.filter(m => m.courtType === 'OTHER').length,
+      lastMatchDate: new Date(Math.max(...matches.map(m => m.date.getTime()))),
+    };
+
+    await this.prisma.userStats.upsert({
+      where: { userId },
+      update: stats,
+      create: {
+        userId,
+        ...stats,
+      },
+    });
   }
 }
