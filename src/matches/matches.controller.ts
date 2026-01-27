@@ -17,32 +17,18 @@ import { CreateMatchDto } from './dto/create-match.dto';
 import { UpdateMatchDto } from './dto/update-match.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
-import { ApiTags, ApiOperation, ApiResponse, ApiQuery, ApiBearerAuth } from '@nestjs/swagger';
 
-@ApiTags('matches')
 @UseGuards(JwtAuthGuard)
-@ApiBearerAuth('JWT-auth')
 @Controller('matches')
 export class MatchesController {
   constructor(private readonly matchesService: MatchesService) {}
 
   @Post()
-  @ApiOperation({ summary: 'Crear un nuevo partido' })
-  @ApiResponse({ status: 201, description: 'Partido creado exitosamente' })
-  @ApiResponse({ status: 401, description: 'No autorizado' })
   create(@CurrentUser() user: any, @Body() createMatchDto: CreateMatchDto) {
     return this.matchesService.create(user.id, createMatchDto);
   }
 
   @Get()
-  @ApiOperation({ summary: 'Obtener todos los partidos del usuario' })
-  @ApiQuery({ name: 'startDate', required: false, type: Date })
-  @ApiQuery({ name: 'endDate', required: false, type: Date })
-  @ApiQuery({ name: 'courtType', required: false, enum: ['FIVE', 'SEVEN', 'ELEVEN', 'OTHER'] })
-  @ApiQuery({ name: 'category', required: false, enum: ['FRIENDS', 'FRIENDLY', 'TOURNAMENT'] })
-  @ApiQuery({ name: 'result', required: false, enum: ['WON', 'LOST', 'TIED'] })
-  @ApiResponse({ status: 200, description: 'Lista de partidos' })
-  @ApiResponse({ status: 401, description: 'No autorizado' })
   findAll(
     @CurrentUser() user: any,
     @Query('startDate') startDate?: Date,
@@ -56,27 +42,16 @@ export class MatchesController {
   }
 
   @Get('recent')
-  @ApiOperation({ summary: 'Obtener partidos recientes' })
-  @ApiResponse({ status: 200, description: 'Partidos recientes' })
-  @ApiResponse({ status: 401, description: 'No autorizado' })
   getRecent(@CurrentUser() user: any) {
     return this.matchesService.getRecentMatches(user.id);
   }
 
   @Get(':id')
-  @ApiOperation({ summary: 'Obtener un partido por ID' })
-  @ApiResponse({ status: 200, description: 'Partido encontrado' })
-  @ApiResponse({ status: 401, description: 'No autorizado' })
-  @ApiResponse({ status: 404, description: 'Partido no encontrado' })
   findOne(@CurrentUser() user: any, @Param('id', ParseUUIDPipe) id: string) {
     return this.matchesService.findOne(user.id, id);
   }
 
   @Patch(':id')
-  @ApiOperation({ summary: 'Actualizar un partido' })
-  @ApiResponse({ status: 200, description: 'Partido actualizado' })
-  @ApiResponse({ status: 401, description: 'No autorizado' })
-  @ApiResponse({ status: 404, description: 'Partido no encontrado' })
   update(
     @CurrentUser() user: any,
     @Param('id') id: string,
@@ -86,10 +61,6 @@ export class MatchesController {
   }
 
   @Delete(':id')
-  @ApiOperation({ summary: 'Eliminar un partido' })
-  @ApiResponse({ status: 200, description: 'Partido eliminado' })
-  @ApiResponse({ status: 401, description: 'No autorizado' })
-  @ApiResponse({ status: 404, description: 'Partido no encontrado' })
   remove(@CurrentUser() user: any, @Param('id') id: string) {
     return this.matchesService.remove(user.id, id);
   }
