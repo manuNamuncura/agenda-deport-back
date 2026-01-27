@@ -4,9 +4,11 @@ import { CreateMatchDto } from './dto/create-match.dto';
 import { UpdateMatchDto } from './dto/update-match.dto';
 import { MatchResponseDto } from './dto/match-response.dto';
 
+import { PlaceStats } from './dto/place-stats.dto';
+
 @Injectable()
 export class MatchesService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
   private mapToDto(match: any): MatchResponseDto {
     return {
@@ -169,5 +171,52 @@ export class MatchesService {
         ...stats,
       },
     });
+  }
+
+  async getStatsByPlace(userId: string): Promise<PlaceStats[]> {
+    const matches = await this.prisma.match.findMany({
+      where: { userId },
+      orderBy: { date: 'desc' },
+    });
+
+    // Agrupar por lugar
+    const statsByPlace = matches.reduce((acc, match) => {
+      const placeName = match.placeName || 'Sin nombre';
+
+      if (!acc[placeName]) {
+        acc[placeName] = {
+          placeName,
+          totalMatches: 0,
+          wins: 0,
+          losses: 0,
+          ties: 0,
+          goalsFor: 0,
+          goalsAgainst: 0,
+          lastPlayed: match.date,
+        };
+      }
+
+      const stats = acc[placeName];
+      stats.totalMatches++;
+      stats.goalsFor += match.goalsFor;
+      stats.goalsAgainst += match.goalsAgainst;
+
+      if (match.result === 'WON') stats.wins++;
+      if (match.result === 'LOST') stats.losses++;
+      if (match.result === 'TIED') stats.ties++;
+
+      if (match.date > stats.lastPlayed) {
+        stats.lastPlayed = match.date;
+      }
+
+      return acc;
+    }, {} as Record<string, any>);
+
+    // Convertir a array y calcular porcentajes
+    return Object.values(statsByPlace).map((place: any) => ({
+      ...place,
+      winRate: place.totalMatches > 0 ? Math.round((place.wins / place.totalMatches) * 100 * 10) / 10 : 0, // 1 decimal
+      goalsDifference: place.goalsFor - place.goalsAgainst,
+    })).sort((a, b) => b.totalMatches - a.totalMatches); // Ordenar por más partidos jugados
   }
 }

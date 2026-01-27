@@ -17,11 +17,12 @@ import { CreateMatchDto } from './dto/create-match.dto';
 import { UpdateMatchDto } from './dto/update-match.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { PlaceStats } from './dto/place-stats.dto';
 
 @UseGuards(JwtAuthGuard)
 @Controller('matches')
 export class MatchesController {
-  constructor(private readonly matchesService: MatchesService) {}
+  constructor(private readonly matchesService: MatchesService) { }
 
   @Post()
   create(@CurrentUser() user: any, @Body() createMatchDto: CreateMatchDto) {
@@ -63,5 +64,10 @@ export class MatchesController {
   @Delete(':id')
   remove(@CurrentUser() user: any, @Param('id') id: string) {
     return this.matchesService.remove(user.id, id);
+  }
+
+  @Get('stats/by-place')
+  async getStatsByPlace(@CurrentUser() user: any): Promise<PlaceStats[]> {
+    return this.matchesService.getStatsByPlace(user.id);
   }
 }
